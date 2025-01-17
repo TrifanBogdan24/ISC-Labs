@@ -146,6 +146,35 @@ print("Decrypted message:", message)
 
 Text initial: **wAyk{mmAwjAuwpzAwmAqjn**.
 
+Pentru codul ASCII 62, adica caracterul `>`, obtin umratorul text: **IGUESSITKINDAISOTP**
+(formatat sa fie si human-readable, s-ar rescrie: "I guess it kinda is OTP")
+
+
+OTP Byte: '>' (ASCII: 62) -> Decrypted Text: IGUESSITKINDAISOTP
+
+
+```py
+def decrypt_one_time_pad(ciphertext):
+    ciphertext_bytes = bytes(ciphertext, 'utf-8')
+    
+    potential_plaintexts = []
+    
+    for key in range(32, 127):
+        decrypted = ''.join(chr(c ^ key) for c in ciphertext_bytes)
+        potential_plaintexts.append((chr(key), decrypted))
+    
+    return potential_plaintexts
+
+ciphertext = "wAyk{mmAwjAuwpzAwmAqjn"
+results = decrypt_one_time_pad(ciphertext)
+
+for otp_byte, result in results:
+    print(f"OTP Byte: '{otp_byte}' (ASCII: {ord(otp_byte)}) -> Decrypted Text: {result}")
+```
+
+
+
+## Task 04 | Many Time Pad
 
 
 

@@ -1,12 +1,21 @@
 def decrypt_one_time_pad(ciphertext):
-    for key in range(256):  # Iterate over all possible byte values
-        decrypted = ''.join(chr(c ^ key) for c in ciphertext.encode('latin1'))  # XOR and decode
-        if is_readable(decrypted):  # Check if the result is readable
-            print(f"Key: {key}, Decrypted Text: {decrypted}")
-
-def is_readable(text):
-    # Check if text contains mostly printable characters
-    return all(32 <= ord(c) <= 126 for c in text)
+    # Convert ciphertext to bytes
+    ciphertext_bytes = bytes(ciphertext, 'utf-8')
+    
+    # Store potential plaintexts with their corresponding key
+    potential_plaintexts = []
+    
+    # Iterate over all printable ASCII characters
+    for key in range(32, 127):
+        # Decrypt using XOR
+        decrypted = ''.join(chr(c ^ key) for c in ciphertext_bytes)
+        potential_plaintexts.append((chr(key), decrypted))  # Store key and decrypted text
+    
+    return potential_plaintexts
 
 ciphertext = "wAyk{mmAwjAuwpzAwmAqjn"
-decrypt_one_time_pad(ciphertext)
+results = decrypt_one_time_pad(ciphertext)
+
+# Print potential plaintexts with their corresponding OTP byte
+for otp_byte, result in results:
+    print(f"OTP Byte: '{otp_byte}' (ASCII: {ord(otp_byte)}) -> Decrypted Text: {result}")
