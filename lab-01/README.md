@@ -1,5 +1,11 @@
 # Lab 01 - Introduction
 
+*Cuprins*:
+- [Lab 01 - Introduction](#lab-01---introduction)
+  - [Task 01 | Decode 'til You Drop](#task-01--decode-til-you-drop)
+  - [Task 02 | Zip it good](#task-02--zip-it-good)
+  - [Task 03 | Find the impostor](#task-03--find-the-impostor)
+
 ## Task 01 | Decode 'til You Drop
 
 

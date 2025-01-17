@@ -1,5 +1,13 @@
 # Lab 07 - Web Security
 
+*Cuprins*:
+- [Lab 07 - Web Security](#lab-07---web-security)
+  - [Task 1 | SQL Injection](#task-1--sql-injection)
+  - [Task 2 | Cross-Site Scripting](#task-2--cross-site-scripting)
+  - [Task 3 | Cross-Site Request Forgery](#task-3--cross-site-request-forgery)
+  - [Task 4 | Server Reconnaissance](#task-4--server-reconnaissance)
+
+
 
 ```js
 sql = "SELECT * FROM table WHERE item = '" + user_input_variable + "' <other expressions>";
@@ -77,6 +85,21 @@ You vote for Georgy Simion, da? He strong, like
 ```
 
 
+
+## Task 3 | Cross-Site Request Forgery
+
+Din cate vad, daca analizez unde se fac request-urile HTTP,
+atunci cand dau **send** la un mesaj,
+ma duce la urmatorul URL `http://localhost:8080/journal/post`,
+si `http://localhost:8080/journal/delete?id=5` atunci cand dau **remove**.
+
+
+Aceasta analiza se face din browser: **Click Dreapta -> Inspect -> Network**.
+Eu cel mai bine m-am luat dupa coloane cu nume.
+
+
+
+
 ## Task 4 | Server Reconnaissance
 
 
@@ -99,16 +122,4 @@ Si am vazut ca server-ul nu ruleaza la **node.js** (cum m-as fi asteptat), ci la
 ```
 
 Inca un HTTP request pe `http://localhost:8080/server.js` si am cautat dupa **ISC{**.
-
-
-## Task 5
-
-Din cate vad, daca analizez unde se fac request-urile HTTP,
-atunci cand dau **send** la un mesaj,
-ma duce la urmatorul URL `http://localhost:8080/journal/post`,
-si `http://localhost:8080/journal/delete?id=5` atunci cand dau **remove**.
-
-
-Aceasta analiza se face din browser: **Click Dreapta -> Inspect -> Network**.
-Eu cel mai bine m-am luat dupa coloane cu nume.
 

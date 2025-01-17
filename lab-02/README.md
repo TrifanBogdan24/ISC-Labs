@@ -1,5 +1,15 @@
 # Lab 02 - Cryptography
 
+*Cuprins*:
+- [Lab 02 - Cryptography](#lab-02---cryptography)
+  - [Task 00 | AES ECB (warm up)](#task-00--aes-ecb-warm-up)
+  - [Task 01 | AES](#task-01--aes)
+  - [Task 02 | RSA - Known factorisation](#task-02--rsa---known-factorisation)
+  - [Task 03 | Is this even OTP?](#task-03--is-this-even-otp)
+  - [Task 04 | Many Time Pad](#task-04--many-time-pad)
+  - [Task 05 | We want Jokes instead of Nukes](#task-05--we-want-jokes-instead-of-nukes)
+
+
 ## Task 00 | AES ECB (warm up)
 
 Am folosit un editor online de `hexedit`
@@ -248,7 +258,7 @@ Textul ala, ar insemna:
 ```
 
 
-## Task 05 
+## Task 05 | We want Jokes instead of Nukes
 
 ```
 Plaintext = Decrypt(Ciphertext) ⊕ IV

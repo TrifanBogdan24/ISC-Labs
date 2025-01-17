@@ -1,5 +1,11 @@
 # Lab 10 - Tunnels. Remote Network Security
 
+*Cuprins*:
+- [Lab 10 - Tunnels. Remote Network Security](#lab-10---tunnels-remote-network-security)
+  - [Task 2 | WireGuard](#task-2--wireguard)
+    - [Metoda cu `iproute2`](#metoda-cu-iproute2)
+    - [Metoda cu `wg-quick`](#metoda-cu-wg-quick)
+
 
 ## Task 2 | WireGuard
 
