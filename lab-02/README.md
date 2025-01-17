@@ -13,12 +13,13 @@
 ## Task 00 | AES ECB (warm up)
 
 Am folosit un editor online de `hexedit`
-si am inlocuit head-ul fisierului din arhiva
-si header-ul corect pentru o imagine `.bmp`.
+si am inlocuit header-ul fisierului din arhiva
+cu header-ul corect pentru o imagine `.bmp`.
 
 Cu https://hexed.it/, a mers sa dau direct drag-and-drop
-la fisier din folder in site, iar apoi, in comparatia cu tool-ul CLI,
+la fisier din folder in web-site, iar apoi, in comparatia cu tool-ul CLI,
 am editat omeneste octetii.
+
 
 
 ```
@@ -30,8 +31,20 @@ Pasi pt https://hexed.it/:
 - Am pus frumos cursorul pe primul numar 
 - **CTRL V**
 - Am ales "overwrite the bytes at the cursor position" (actiunea)
-- Am ales "Hexadecima Values" (formatul datelor)
+- Am ales "Hexadecimal Values" (formatul datelor)
 
+
+Ca rezultat, imaginea contine un pinguin
+(celeberul logo Linux) si urmatorul text:
+
+```
+AES_ECB_SHOULD_NOT_BE_USED_FOR_MORE_THAN_ONE_BLOCK
+```
+
+
+<br>
+<img alt="img" src="./task-00/Image/image.bmp" height=500px width=auto>
+<br>
 
 
 ## Task 01 | AES
