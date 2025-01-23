@@ -54,13 +54,73 @@ $ nmap -sV -Pn 10.9.2.212
 
 ### Secure Your VM from Unwanted SSH/HTTP Traffic
 
-TODO: do it!
+
+**STEP 1**: Access Your Colleague’s VM and Observe Traffic
+
+
+Din nu stiu ce motive, conexiunea prin ftp/curl/ssh nu merge catre colegul.
+
+A trebuit sa:
+1. Generez o pereche de chei SSH pe VM-ul meu
+2. A trebuit sa ii dau coleguluui cheia mea privata (ca nici `ssh-copy-id` nu merge)  
+    si sa o adauge manual la `~/.ssh/authorized_keys`
+
+Eu:
 
 ```sh
-# IP-ul VM-ului: 10.9.2.224
-$ curl 10.9.1.169
-$ ssh hacker@10.9.1.169  # Cu parola student
+# Comanda generare chei SSH
+ssh-keygen -t ed25519 -f ~/.ssh/coleg -N ""
 ```
+
+Colegul:
+
+```sh
+# sau vim
+nano -l ~/.ssh/authorized_keys
+```
+
+
+```sh
+# Conectare
+ssh -i ~/.ssh/coleg student@<IP-Coleg>
+```
+
+
+**STEP 2**: Monitor Incoming Traffic with tcpdump
+
+
+```sh
+# Un fel de tcdump (WireShark in CLI)
+root@host:~# apt install -y tshark
+```
+
+```sh
+root@host:~# tshark -i eth0 | grep 'SSH'
+Running as user "root" and group "root". This could be dangerous.
+Capturing on 'eth0'
+ ** (tshark:2512) 17:20:29.419217 [Main MESSAGE] -- Capture started.
+ ** (tshark:2512) 17:20:29.419771 [Main MESSAGE] -- File: "/tmp/wireshark_eth06HOW02.pcapng"
+34     1 0.000000000     10.9.5.9 → 141.85.150.247 SSH 118 Server: Encrypted packet (len=52)
+    2 0.000047777     10.9.5.9 → 141.85.150.247 SSH 118 Server: Encrypted packet (len=52)
+    3 0.000131582     10.9.5.9 → 141.85.150.247 SSH 166 Server: Encrypted packet (len=100)
+    4 0.000184417     10.9.5.9 → 141.85.150.247 SSH 190 Server: Encrypted packet (len=124)
+    9 0.754664756     10.9.5.9 → 141.85.150.247 SSH 110 Server: Encrypted packet (len=44)
+```
+
+
+> IP-ul pentru fep.grid este **141.85.150.247**.
+
+**STEP 3**: Block Unwanted SSH and HTTP Traffic
+
+
+
+```sh
+# IP fep: 141.85.150.247
+root@host:~# iptables -A INPUT -p tcp -s <IP-fep> -m multiport --dports 22,80 -j ACCEPT
+root@host:~# iptables -A INPUT -p tcp -s <IP-coleg> -m multiport --dports 22,80 -j ACCEPT
+root@host:~# iptables -A INPUT -p tcp -m multiport --dports 22,80 -j REJECT
+```
+
 
 
 
