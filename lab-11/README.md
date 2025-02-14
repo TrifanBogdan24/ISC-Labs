@@ -8,6 +8,7 @@
     - [Generare chei pentru utilizatori](#generare-chei-pentru-utilizatori)
     - [Send **red**'s public key to **green**](#send-reds-public-key-to-green)
     - [Encrypt a file on **green**, send to **red** and decrypt](#encrypt-a-file-on-green-send-to-red-and-decrypt)
+    - [Trust channel](#trust-channel)
   - [Task 2. Tor](#task-2-tor)
     - [Configurare Tor](#configurare-tor)
     - [DNS peste TCP (nu cred ca merge :()](#dns-peste-tcp-nu-cred-ca-merge-)
@@ -299,6 +300,130 @@ gpg: encrypted with 4096-bit RSA key, ID 9DCD7B5A3A5FE83F, created 2025-02-14
 > La fel... la decriptare, nu merge sa redirectez contintul intr-un alt fisier :(.
 
 > Also, la decriptare va cere si **passphrase**-ul (parola) pentru cheia privata.
+
+
+### Trust channel
+
+
+```sh
+green@isc-vm:~$ gpg --sign-key red@cs.pub.ro      # Sign red's key
+green@isc-vm:~$ gpg --list-keys 
+/home/green/.gnupg/pubring.kbx
+------------------------------
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      AA7511C6F6C7CEF4D45F999AC6F92EA541D95274
+uid           [ultimate] green-user <green@cs.pub.ro>
+
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      5CF475123632668B9F639813D13A27F88794CC12
+uid           [  full  ] reduser <red@cs.pub.ro>
+sub   rsa4096 2025-02-14 [E] [expires: 2025-02-28]
+
+
+green@isc-vm:~$ gpg --export --armor green@cs.pub.ro > green-pub-key.asc
+green@isc-vm:~$ gpg --export --armor red@cs.pub.ro > red-pub-key.asc
+❯ scp -J <moodle-username>@fep.grid.pub.ro green@<IP-VM>:green-pub-key.asc blue@<IP-VM>:~
+❯ scp -J <moodle-username>@fep.grid.pub.ro green@<IP-VM>:red-pub-key.asc blue@<IP-VM>:~
+❯ ssh -J <moodle-username>@fep.grid.pub.ro blue@<IP-VM>
+blue@isc-vm:~$ gpg --import green-pub-key.asc 
+blue@isc-vm:~$ gpg --import red-pub-key.asc 
+```
+```sh
+blue@isc-vm:~$ gpg --list-keys
+/home/blue/.gnupg/pubring.kbx
+-----------------------------
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      3F02B56EAF1570792C194ABD0DB15707A553AA81
+uid           [ultimate] blue-user <blue@cs.pub.ro>
+sub   rsa4096 2025-02-14 [E] [expires: 2025-02-28]
+
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      AA7511C6F6C7CEF4D45F999AC6F92EA541D95274
+uid           [ unknown] green-user <green@cs.pub.ro>
+
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      5CF475123632668B9F639813D13A27F88794CC12
+uid           [ unknown] reduser <red@cs.pub.ro>
+sub   rsa4096 2025-02-14 [E] [expires: 2025-02-28]
+```
+
+```sh
+❯ ssh -J <moodle-username>@fep.grid.pub.ro red@<IP-VM>
+red@isc-vm:~$ echo "Parola: 12345" > file.txt
+red@isc-vm:~$ gpg --clearsign file.txt 
+red@isc-vm:~$ ls -1
+file.txt
+file.txt.asc
+❯ scp -J <moodle-username>@fep.grid.pub.ro red@<IP-VM>:file.txt.asc blue@<IP-VM>:~
+❯ ssh -J <moodle-username>@fep.grid.pub.ro blue@<IP-VM>
+```
+
+```sh
+blue@isc-vm:~$ cat file.txt.asc
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Parola: 12345
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEXPR1EjYyZoufY5gT0Ton+IeUzBIFAmevTfMACgkQ0Ton+IeU
+zBKILw/7Ba4qTHA9fKedfuYRoWthEHbvShskchmNwOhiKlq/0K2KaSI+qFdHvcU4
+yzup84RCVavYk8YPtysTa3v1ncN3taCtS+AL18++WdMfsQ3btHXAcI/+YBTpXki8
+b7+NtFgRhGGq8Em2iETTVMKo0ysr4QJVQgnU15ciV9brrCTePzLhBntZY3ha4bT1
+nddKcg5dnl1yrx0WTWVj5ejz/lvr+3jh8Zkg715Yj5mxc7zQ99n7o28mr5dfocwy
+HYqGqQ7q9jRCf97Kgqml6xCAhbZkRh7cFcVijlnRYxrm1qa7U1vONxlELU4Y1MGu
+BNr/AZsMLxBEgrVWYBK+dY+y7mSsyu+DljwhlTbPndMuNN/djInpd0C3XpCBztKU
+xskTkhp6C4fQwq32UZgljg+uh6rq5oxudVlk+4ypmkXkvhXWhxZXBovMLZ/GH+wA
+Np3VZFBd0pf6mYzO3SA9wGur1yoVpLjbWbW50s7YErFpts78zzRVNE1gVaHQIAR8
+2+i6IzssoC7dlf/fGQ1OCJuB/nDsRrF0tHOhwbX8ew1yz4w6EMt4EPJA4MqHHRoM
+zRcvGL0i+sXCyvNvFuoasLJrkxWDEa2O8kdzhQJWdwCyXpyqHPyQ0dGvUfUHmFJM
+tzhRXhMgc4II3cmYXXooDTmL9ZaA8XSceF/UNsNO4C7gPtbPTx0=
+=Ge+c
+-----END PGP SIGNATURE-----
+```
+
+```sh
+blue@isc-vm:~$ gpg --edit-key green@cs.pub.ro
+gpg (GnuPG) 2.2.27; Copyright (C) 2021 Free Software Foundation, Inc.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+
+pub  rsa4096/C6F92EA541D95274
+     created: 2025-02-14  expires: 2025-02-28  usage: SC  
+     trust: unknown       validity: unknown
+[ unknown] (1). green-user <green@cs.pub.ro>
+
+gpg> trust
+pub  rsa4096/C6F92EA541D95274
+     created: 2025-02-14  expires: 2025-02-28  usage: SC  
+     trust: unknown       validity: unknown
+[ unknown] (1). green-user <green@cs.pub.ro>
+
+Please decide how far you trust this user to correctly verify other users' keys
+(by looking at passports, checking fingerprints from different sources, etc.)
+
+  1 = I don't know or won't say
+  2 = I do NOT trust
+  3 = I trust marginally
+  4 = I trust fully
+  5 = I trust ultimately
+  m = back to the main menu
+
+Your decision? 5
+Do you really want to set this key to ultimate trust? (y/N) y
+
+pub  rsa4096/C6F92EA541D95274
+     created: 2025-02-14  expires: 2025-02-28  usage: SC  
+     trust: ultimate      validity: unknown
+[ unknown] (1). green-user <green@cs.pub.ro>
+Please note that the shown key validity is not necessarily correct
+unless you restart the program.
+
+gpg> save
+Key not changed so no update needed.
+```
+
 
 
 ## Task 2. Tor
