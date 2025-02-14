@@ -3,14 +3,305 @@
 
 *Cuprins*:
 - [Lab 11 - Privacy Technologies](#lab-11---privacy-technologies)
-  - [Tor](#tor)
+  - [Task 0. Users](#task-0-users)
+  - [Task 1. Pretty Good Privacy](#task-1-pretty-good-privacy)
+    - [Generare chei pentru utilizatori](#generare-chei-pentru-utilizatori)
+    - [Send **red**'s public key to **green**](#send-reds-public-key-to-green)
+    - [Encrypt a file on **green**, send to **red** and decrypt](#encrypt-a-file-on-green-send-to-red-and-decrypt)
+  - [Task 2. Tor](#task-2-tor)
     - [Configurare Tor](#configurare-tor)
     - [DNS peste TCP (nu cred ca merge :()](#dns-peste-tcp-nu-cred-ca-merge-)
     - [Verificare adresa IP publica](#verificare-adresa-ip-publica)
     - [SSH (Local) Port Forwarding](#ssh-local-port-forwarding)
     - [Configurare Socks5 Proxy in Firefox](#configurare-socks5-proxy-in-firefox)
 
-## Tor
+## Task 0. Users
+
+
+
+```sh
+sudo useradd -m -s /bin/bash red 
+sudo useradd -m -s /bin/bash green 
+sudo useradd -m -s /bin/bash blue 
+
+sudo cp -r /home/student/.ssh /home/red/
+sudo cp -r /home/student/.ssh /home/green/
+sudo cp -r /home/student/.ssh /home/blue/
+
+sudo chown -R red:red /home/red/.ssh
+sudo chown -R green:green /home/green/.ssh
+sudo chown -R blue:blue /home/blue/.ssh
+```
+
+Pasi:
+1. Crearea utilizatorilor
+2. Pentru a ma putea conecta cu SSH direct la userii nou creati,
+  copiez directorul `~/.ssh/` din student la fiecare user in parte
+3. Modific permisiunile pe directorul `~/.ssh/` pt fiecare user
+
+
+
+
+## Task 1. Pretty Good Privacy
+
+```sh
+sudo apt update && sudo apt-get install -y rng-tools
+```
+
+```sh
+sudo systemctl status rng-tools  # e pornit => TOTUL OK
+```
+
+
+### Generare chei pentru utilizatori
+
+
+Generararea de chei cu `gpg` nu merge daca schimb user-ul si rulez comanda :(.
+
+> For the next exercises,
+> you will need to be **logged in as users red/green/blue via ssh**
+> in order to generate the gpg key.
+
+
+
+```sh
+student in ~ at isc-vm …
+➜ sudo su - red
+red@isc-vm:~$ gpg --full-generate-key     # Nu merge, va da eroare :(
+```
+
+
+Astfel, trebuie sa ma conectez la useri prin SSH:
+
+
+```sh
+# TL;DR
+ssh -J <moodle-username>@fep.grid.pub.ro blue@<IP-VM>
+gpg --full-generate-key
+```
+
+
+```sh
+❯ ssh -J <moodle-username>@fep.grid.pub.ro red@<IP-VM>
+red@isc-vm:~$ gpg --full-generate-key
+Note that this key cannot be used for encryption.  You may want to use
+the command "--edit-key" to generate a subkey for this purpose.
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      5CF475123632668B9F639813D13A27F88794CC12
+uid                      reduser <red@cs.pub.ro>
+red@isc-vm:~$ exit
+logout
+```
+
+
+```sh
+❯ ssh -J <moodle-username>@fep.grid.pub.ro green@<IP-VM>
+green@isc-vm:~$ gpg --full-generate-key
+Note that this key cannot be used for encryption.  You may want to use
+the command "--edit-key" to generate a subkey for this purpose.
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      136E3F0C4558CE824270B63FAE8FA41610D6234C
+uid                      green <green@cs.pub.ro>
+green@isc-vm:~$ exit
+logout
+```
+
+
+
+```sh
+❯ ssh -J <moodle-username>@fep.grid.pub.ro blue@<IP-VM>
+blue@isc-vm:~$ gpg --full-generate-key
+Note that this key cannot be used for encryption.  You may want to use
+the command "--edit-key" to generate a subkey for this purpose.
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      3953D4C3F5F87D64675B2A4983842759618CA7D4
+uid                      blueuser <blue@cs.pub.ro>
+
+blue@isc-vm:~$ exit
+logout
+```
+
+
+### Send **red**'s public key to **green**
+
+```sh
+❯ ssh -J <moodle-username>@fep.grid.pub.ro red@<IP-VM>
+red@isc-vm:~$ gpg --export --armor red@cs.pub.ro > red-pub-key.asc
+❯ scp -J <moodle-username>@fep.grid.pub.ro red@<IP-VM>:red-pub-key.asc .        # Descarc (local) cheia publica de pe red
+❯ scp -J <moodle-username>@fep.grid.pub.ro red-pub-key.asc green@<IP-VM>:~      # Uploadez cheia pe green
+❯ ssh -J <moodle-username>@fep.grid.pub.ro green@<IP-VM>
+green@isc-vm:~$ cat red-pub-key.asc        # Double-check
+green@isc-vm:~$ gpg --import red-pub-key.asc
+green@isc-vm:~$ gpg --list-keys
+```
+
+
+```sh
+green@isc-vm:~$ gpg --list-keys
+/home/green/.gnupg/pubring.kbx
+------------------------------
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      136E3F0C4558CE824270B63FAE8FA41610D6234C
+uid           [ultimate] green <green@cs.pub.ro>
+
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      5CF475123632668B9F639813D13A27F88794CC12
+uid           [ unknown] reduser <red@cs.pub.ro>
+```
+
+
+
+### Encrypt a file on **green**, send to **red** and decrypt
+---
+
+> Aici se ia o tzeapa!
+
+Hai sa ne uitam la cheia publica a lui **red**:
+
+```sh
+green@isc-vm:~$ gpg --list-keys red@cs.pub.ro
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      5CF475123632668B9F639813D13A27F88794CC12
+uid           [ultimate] reduser <red@cs.pub.ro>
+```
+
+First of all, ar trebui sa o editam sa avem **incredere** in ea,
+dar altceva e mai important acum :).
+
+`[SC]`-ul ala nu e pus degeaba acolo, are o insemnate:
+- `[S]` inseamna **signing capabilities**
+- `[C]` inseamna **certification capabilites**
+
+> Ca sa criptam date cu cheia publica, ar trebui sa vedem un `[E]` (de la **encryption**) pe acolo.
+
+Si de vreme ce cheia publica se modifica (`edit`) doar impreuna cu cea privata, e numai buna de aruncat la gunoi :(.
+
+```sh
+green@isc-vm:~$ gpg --delete-key red@cs.pub.ro
+gpg (GnuPG) 2.2.27; Copyright (C) 2021 Free Software Foundation, Inc.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+
+pub  rsa4096/D13A27F88794CC12 2025-02-14 reduser <red@cs.pub.ro>
+
+Delete this key from the keyring? (y/N) y
+```
+
+La fel si:
+
+```sh
+green@isc-vm:~$ rm red-pub-key.asc
+```
+
+
+Ma duc frumos inapoi pe **red** si dau `edit` la key-pair sa aiba si **encryption role**:
+
+> `addkey` in promptul de **gpg** imi permite sa adaug noi roluri.
+
+```sh
+red@isc-vm:~$ gpg --list-keys 
+/home/red/.gnupg/pubring.kbx
+----------------------------
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      5CF475123632668B9F639813D13A27F88794CC12
+uid           [ultimate] reduser <red@cs.pub.ro>
+
+red@isc-vm:~$ gpg --edit-key 5CF475123632668B9F639813D13A27F88794CC12
+gpg (GnuPG) 2.2.27; Copyright (C) 2021 Free Software Foundation, Inc.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Secret key is available.
+
+sec  rsa4096/D13A27F88794CC12
+     created: 2025-02-14  expires: 2025-02-28  usage: SC  
+     trust: ultimate      validity: ultimate
+[ultimate] (1). reduser <red@cs.pub.ro>
+
+gpg> addkey
+Please select what kind of key you want:
+   (3) DSA (sign only)
+   (4) RSA (sign only)
+   (5) Elgamal (encrypt only)
+   (6) RSA (encrypt only)
+  (14) Existing key from card
+Your selection? 6
+RSA keys may be between 1024 and 4096 bits long.
+What keysize do you want? (3072) 4096
+Requested keysize is 4096 bits
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+Key is valid for? (0) 2w
+Key expires at Fri 28 Feb 2025 01:56:05 PM EET
+Is this correct? (y/N) y
+Really create? (y/N) y
+We need to generate a lot of random bytes. It is a good idea to perform
+some other action (type on the keyboard, move the mouse, utilize the
+disks) during the prime generation; this gives the random number
+generator a better chance to gain enough entropy.
+ 
+sec  rsa4096/D13A27F88794CC12
+     created: 2025-02-14  expires: 2025-02-28  usage: SC  
+     trust: ultimate      validity: ultimate
+ssb  rsa4096/9DCD7B5A3A5FE83F
+     created: 2025-02-14  expires: 2025-02-28  usage: E   
+[ultimate] (1). reduser <red@cs.pub.ro>
+
+gpg>  save
+red@isc-vm:~$ gpg --list-keys 
+/home/red/.gnupg/pubring.kbx
+----------------------------
+pub   rsa4096 2025-02-14 [SC] [expires: 2025-02-28]
+      5CF475123632668B9F639813D13A27F88794CC12
+uid           [ultimate] reduser <red@cs.pub.ro>
+sub   rsa4096 2025-02-14 [E] [expires: 2025-02-28]
+
+red@isc-vm:~$ 
+```
+
+
+Acum avem si `[E]` pe acolo.
+
+
+```sh
+# Export cheia publica
+red@isc-vm:~$ gpg --export --armor red@cs.pub.ro > red-pub-key.asc
+
+# Copiez cheia publica a lui red la green
+❯ scp -J <moodle-username>@fep.grid.pub.ro red@<IP-VM>:red-pub-key.asc green@<IP-VM>:~
+
+# Connect to green
+ssh -J <moodle-username>@fep.grid.pub.ro green@<IP-VM>
+green@isc-vm:~$ gpg --list-keys red@cs.pub.ro         # Acum va aparea ca poate sa si cripteze
+green@isc-vm:~$ gpg --encrypt --recipient red@cs.pub.ro secret_file.txt
+```
+
+
+> La criptare
+> - Nu merge sa redirectez continutul intr-un alt fisier :(
+> - Va creea automat fisierul `secret_file.txt.gpg`
+
+```sh
+# Transfer de la green la red
+❯ scp -J <moodle-username>@fep.grid.pub.ro green@<IP-VM>:secret_file.txt.gpg red@<IP-VM>:~
+❯ ssh -J <moodle-username>@fep.grid.pub.ro red@<IP-VM>
+red@isc-vm:~$ gpg --decrypt secret_file.txt.gpg 
+gpg: encrypted with 4096-bit RSA key, ID 9DCD7B5A3A5FE83F, created 2025-02-14
+      "reduser <red@cs.pub.ro>"
+“text”
+```
+
+> La fel... la decriptare, nu merge sa redirectez contintul intr-un alt fisier :(.
+
+> Also, la decriptare va cere si **passphrase**-ul (parola) pentru cheia privata.
+
+
+## Task 2. Tor
 
 
 ### Configurare Tor
